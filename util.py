@@ -53,7 +53,7 @@ class CalibrationBenchmark(object):
         """
         # create empty list of lists
         binned_index = [[] for _ in range(self.m)]
-        entry_count, class_count = self.data.shape
+        entry_count, _ = self.data.shape
 
         # get the confidence of the predicted class
         self.conf = self.data.max(axis=1)
@@ -116,3 +116,8 @@ class ChordsTestSet(object):
     
     def npz_fp(self, idx):
         return os.path.join(self.data_home, 'crema_out/{}.npz'.format(self.index_dict[str(idx)]))
+
+class KeysTestSet(object):
+
+    def __init__(self, data_home='/scratch/qx244/data/gskey'):
+        self.data_home = data_home
