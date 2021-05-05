@@ -29,6 +29,28 @@ def better_calibrate(beta, raw_conf):
     unnormalized = raw_conf ** beta
     return unnormalized / np.sum(unnormalized, axis=1, keepdims=True)
 
+def softmax(mat):
+    """shape: x * 12"""
+    e = np.exp(mat)
+    return e / np.sum(e, axis=1, keepdims=True)
+
+def key_marg_simple_add(key_output):
+    """bin 0 is A, bin 1 is Bb, bin 11 is G#"""
+    return key_output[:, :12] + key_output[:, 12:]
+
+def key_marg_add_logit(key_output):
+    """bin 0 is A, bin 1 is Bb, bin 11 is G#"""
+    z = np.log(key_output)
+    return softmax(z[:, :12] + z[:, 12:])
+
+def calibrate_root(raw_conf):
+    return better_calibrate(0.7956625610036311, raw_conf)
+
+def calibrate_key(key_output):
+    """Calibrate and roll towards 0 = C"""
+    calibrated = better_calibrate(0.7806331984345791, key_marg_add_logit(key_output))
+    return np.roll(calibrated, -3, axis=1)
+
 class CalibrationBenchmark(object):
     
     def __init__(self, data, label, m=15):
@@ -117,18 +139,6 @@ class ChordsTestSet(object):
     
     def npz_fp(self, idx):
         return os.path.join(self.data_home, 'crema_out/{}.npz'.format(self.index_dict[str(idx)]))
-
-class KeysTestSet(object):
-
-    def __init__(self, data_home='/scratch/qx244/data/gskey/'):
-        self.data_home = data_home
-
-    def __len__(self):
-        pass
-
-    def _load_tracks(self):
-        aug_path = os.path.join(self.data_home, 'augmentation')
-        return aug_path
 
 class RockCorpus(object):
     def __init__(self, data_home='/scratch/qx244/data/rock_corpus_v2-1/'):
