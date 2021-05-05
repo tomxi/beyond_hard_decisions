@@ -120,8 +120,15 @@ class ChordsTestSet(object):
 
 class KeysTestSet(object):
 
-    def __init__(self, data_home='/scratch/qx244/data/gskey'):
+    def __init__(self, data_home='/scratch/qx244/data/gskey/'):
         self.data_home = data_home
+
+    def __len__(self):
+        pass
+
+    def _load_tracks(self):
+        aug_path = os.path.join(self.data_home, 'augmentation')
+        return aug_path
 
 class RockCorpus(object):
     def __init__(self, data_home='/scratch/qx244/data/rock_corpus_v2-1/'):
@@ -161,4 +168,9 @@ class RockCorpus(object):
     def proc_path(self, idx):
         title = self.titles[idx]
         out = os.path.join(self.data_home, 'proc/{}.npz'.format(title))
+        return out
+
+    def jams_path(self, idx):
+        title = self.titles[idx]
+        out = os.path.join(self.data_home, 'jams/{}.jams'.format(title))
         return out
