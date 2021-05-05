@@ -1,6 +1,7 @@
 import numpy as np
 import os
 import json
+from glob import glob
 from scipy.optimize import minimize_scalar
 
 def better_track_nll(beta, hard_label, soft_out):
@@ -23,7 +24,7 @@ def better_calibrate(beta, raw_conf):
         beta: inverse temprature
         raw_conf: np.array of uncalibrated confidence, shape: # of entries x # of classes
     returns:
-        calibrated_conf: same shape as raw_out, but calibrated
+        calibrated_conf: same shape as raw_out, but caßlibrated
     """
     unnormalized = raw_conf ** beta
     return unnormalized / np.sum(unnormalized, axis=1, keepdims=True)
@@ -121,3 +122,38 @@ class KeysTestSet(object):
 
     def __init__(self, data_home='/scratch/qx244/data/gskey'):
         self.data_home = data_home
+
+class RockCorpus(object):
+    def __init__(self, data_home='/scratch/qx244/data/rock_corpus_v2-1/'):
+        self.data_home = data_home
+        self.titles = self._load_tracks()
+
+    def __len__(self):
+        return len(self.titles)
+
+    def _load_tracks(self):
+        anno_list = glob(os.path.join(self.data_home, 'timed/*.tcl'))
+        titles = []
+        for anno_p in anno_list:
+            title = os.path.basename(anno_p).rsplit('_', 1)[0]
+            if title not in titles:
+                titles.append(title)
+        return titles
+
+    def audio_path(self, idx):
+        title = self.titles[idx]
+        out = os.path.join(self.data_home, 'rs_audio_masters_mp3/{}.mp3'.format(title))
+        assert os.path.exists(out)
+        return out
+
+    def tdc_anno_path(self, idx):
+        title = self.titles[idx]
+        out = os.path.join(self.data_home, 'timed/{}_tdc.tcl'.format(title))
+        assert os.path.exists(out)
+        return out
+
+    def dt_anno_path(self, idx):
+        title = self.titles[idx]
+        out = os.path.join(self.data_home, 'timed/{}_dt.tcl'.format(title))
+        assert os.path.exists(out)
+        return out
