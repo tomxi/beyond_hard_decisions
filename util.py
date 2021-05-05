@@ -157,3 +157,8 @@ class RockCorpus(object):
         out = os.path.join(self.data_home, 'timed/{}_dt.tcl'.format(title))
         assert os.path.exists(out)
         return out
+
+    def proc_path(self, idx):
+        title = self.titles[idx]
+        out = os.path.join(self.data_home, 'proc/{}.npz'.format(title))
+        return out
