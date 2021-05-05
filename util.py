@@ -46,7 +46,7 @@ def key_marg_add_logit(key_output):
 def key_marg_hard_max(key_output):
     """bin 0 is A"""
     zmax = np.maximum(key_output[:, :12], key_output[:, 12:])
-    zmax /= zmax.sum(axis=1)
+    zmax /= zmax.sum(axis=1, keepdims=True)
     return zmax
 
 def calibrate_root(raw_conf):
