@@ -206,7 +206,7 @@ class RockCorpus(object):
     def track_data(self, idx):
         out = {}
 
-        data = np.load(self.proc_path(idx))
+        data = np.load(self.proc_path(idx), allow_pickle=True)
         key_output = data['key']
         root_output = data['chord'].item()['chord_root']
 
