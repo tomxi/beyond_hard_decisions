@@ -228,6 +228,6 @@ class RockCorpus(object):
         anns = jam.search(namespace='pitch_class')
         for a in anns:
             num_frames = (a.duration - frame_period/2) / frame_period
-            f_times = np.arange(np.floor(num_frames)) * frame_period
-            
+            f_times = np.arange(np.floor(num_frames)) * frame_period + frame_period/2
+
             return a.to_samples(f_times)
