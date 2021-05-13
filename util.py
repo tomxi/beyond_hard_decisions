@@ -2,6 +2,7 @@ import numpy as np
 import os
 import json
 import jams
+import librosa
 from glob import glob
 from scipy.optimize import minimize_scalar
 
@@ -226,8 +227,25 @@ class RockCorpus(object):
         frame_period = 4096 / 44100
 
         anns = jam.search(namespace='pitch_class')
+        key_mats = []
+        root_mats = []
         for a in anns:
             num_frames = (a.duration - frame_period/2) / frame_period
             f_times = np.arange(np.floor(num_frames)) * frame_period + frame_period/2
 
-            return a.to_samples(f_times)
+            frame_list = a.to_samples(f_times)
+            frame_rel_root = []
+            frame_key = []
+            for frame in frame_list:
+                if len(frame) == 0:
+                    frame_rel_root.append(12)
+                    frame_key.append(12)
+                else:
+                    frame_key.append(librosa.note_to_midi(frame[0]['tonic']) % 12)
+                    frame_rel_root.append(frame[0]['pitch'])
+
+            key_mats.append(np.eye(13)[frame_key])
+            root_mats.append(np.eye(13)[frame_rel_root])
+        
+        return {'key': np.mean(key_mats, axis=0), 
+                'root': np.mean(root_mats, axis=0)}
