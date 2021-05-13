@@ -216,6 +216,6 @@ class RockCorpus(object):
         out['calib_key'] = calibrate_key(key_output)
         out['calib_root'] = calibrate_root(root_output)
 
-        out['hard_key'] = np.eye(12)[np.argmax(self.key_output, axis=1)]
-        out['hard_root'] = np.eye(13)[np.argmax(self.root_output, axis=1)]
+        out['hard_key'] = np.eye(12)[np.argmax(out['raw_key'], axis=1)]
+        out['hard_root'] = np.eye(13)[np.argmax(out['raw_root'], axis=1)]
         return out
