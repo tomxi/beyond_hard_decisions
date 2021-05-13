@@ -172,7 +172,8 @@ class RockCorpus(object):
             title = os.path.basename(anno_p).rsplit('_', 1)[0]
             if title not in titles:
                 titles.append(title)
-        return titles.sorted()
+        titles.sort()
+        return titles
 
     def audio_path(self, idx):
         title = self.titles[idx]
