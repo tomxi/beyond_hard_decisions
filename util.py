@@ -1,6 +1,7 @@
 import numpy as np
 import os
 import json
+import jams
 from glob import glob
 from scipy.optimize import minimize_scalar
 
@@ -219,3 +220,14 @@ class RockCorpus(object):
         out['hard_key'] = np.eye(12)[np.argmax(out['raw_key'], axis=1)]
         out['hard_root'] = np.eye(13)[np.argmax(out['raw_root'], axis=1)]
         return out
+
+    def ann_data(self, idx):
+        jam = jams.load(self.jams_path(idx))
+        frame_period = 4096 / 44100
+
+        anns = jam.search(namespace='pitch_class')
+        for a in anns:
+            num_frames = (a.duration - frame_period/2) / frame_period
+            f_times = np.arange(np.floor(num_frames)) * frame_period
+            
+            return a.to_samples(f_times)
