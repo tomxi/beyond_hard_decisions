@@ -57,6 +57,17 @@ def calibrate_key(key_output):
     calibrated = better_calibrate(0.7806331984345791, key_marg_add_logit(key_output))
     return np.roll(calibrated, -3, axis=1)
 
+def relative_root(key_output, root_output):
+    output = np.zeros(root_output.shape)
+    
+    root_only = root_output[:, :12] # no N class
+    for tonic in range(12):
+        rel_root = np.roll(root_only, -tonic, axis=1)
+        output[:, :12] += rel_root * key_output[:, tonic]
+    
+    output[:, 12] = root_output[:, 12]
+    return output
+
 class CalibrationBenchmark(object):
     
     def __init__(self, data, label, m=15):
@@ -161,7 +172,7 @@ class RockCorpus(object):
             title = os.path.basename(anno_p).rsplit('_', 1)[0]
             if title not in titles:
                 titles.append(title)
-        return titles
+        return titles.sorted()
 
     def audio_path(self, idx):
         title = self.titles[idx]
@@ -189,4 +200,21 @@ class RockCorpus(object):
     def jams_path(self, idx):
         title = self.titles[idx]
         out = os.path.join(self.data_home, 'jams/{}.jams'.format(title))
+        return out
+
+    def track_data(self, idx):
+        out = {}
+
+        data = np.load(self.proc_path(idx))
+        key_output = data['key']
+        root_output = data['chord'].item()['chord_root']
+
+        out['raw_key'] = np.roll(key_marg_add_logit(key_output), -3, axis=1)
+        out['raw_root'] = root_output
+
+        out['calib_key'] = calibrate_key(key_output)
+        out['calib_root'] = calibrate_root(root_output)
+
+        out['hard_key'] = np.eye(12)[np.argmax(self.key_output, axis=1)]
+        out['hard_root'] = np.eye(13)[np.argmax(self.root_output, axis=1)]
         return out
