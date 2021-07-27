@@ -5,6 +5,7 @@ import jams
 import librosa
 from glob import glob
 from scipy.optimize import minimize_scalar
+import matplotlib.pyplot as plt
 
 def better_track_nll(beta, hard_label, soft_out):
     """ just summing frame_nll across the whole track
@@ -57,6 +58,11 @@ def calibrate_root(raw_conf):
 def calibrate_key(key_output):
     """Calibrate and roll towards 0 = C"""
     calibrated = better_calibrate(0.7806331984345791, key_marg_add_logit(key_output))
+    return np.roll(calibrated, -3, axis=1)
+
+def new_cali_key(output, b=1.1880162333380975):
+    calibrated_full = better_calibrate(b, output)
+    calibrated = calibrated_full[:, :12] + calibrated_full[:, 12:]
     return np.roll(calibrated, -3, axis=1)
 
 def relative_root(key_output, root_output):
@@ -137,6 +143,39 @@ class CalibrationBenchmark(object):
         weight = self.hist() / self.data.shape[0]
         return np.dot(np.abs(error), weight)
 
+    def plot_rd(self, fname=None):
+        def x_ticks(m=15):
+            posts = np.linspace(0,1,num=m+1)
+            bin_center = (posts[:-1] + posts[1:]) / 2
+            width = posts[1]
+            return bin_center, width
+        
+        hist = self.hist()
+        acc = self.bin_accuracy()
+        conf = self.bin_confidence()
+        
+        x, width = x_ticks(m=self.m)
+        fig, axs = plt.subplots(1, 2 ,figsize=(8, 4))
+        ax, axh = axs
+        ax.plot([0.01,0.99], [0.01,0.99], ':')
+        ax.bar(x, acc, width, edgecolor='k', label='output')
+        ax.bar(x, conf - acc, width, acc, edgecolor='r', fill=False, hatch='\\', label='gap')
+
+        ax.axis('equal')
+        ax.set(xlabel='Confidence', ylabel='Accuracy', xlim=(0,1), ylim=(0,1),
+               title='Reliability Diagram')
+        ax.legend()
+
+        axh.bar(x, hist / hist.sum(), width, edgecolor='k')
+        axh.axis('equal')
+        axh.set(xlabel='Confidence', ylabel='Prevalence', xlim=(0,1), ylim=(0,1),
+               title='Confidence Histogram')
+
+        if fname: 
+            fig.savefig(fname)
+        plt.show()
+        
+    
 class ChordsTestSet(object):
     
     def __init__(self, data_home='/scratch/qx244/data/eric_chords_21sp'):
@@ -213,12 +252,15 @@ class RockCorpus(object):
         root_output = data['chord'].item()['chord_root']
 
         out['raw_key'] = np.roll(key_marg_add_logit(key_output), -3, axis=1)
+        out['raw_key_new'] = np.roll(key_marg_simple_add(key_output), -3, axis=1)
         out['raw_root'] = root_output
 
         out['calib_key'] = calibrate_key(key_output)
+        out['calib_key_new'] = new_cali_key(key_output)
         out['calib_root'] = calibrate_root(root_output)
 
         out['hard_key'] = np.eye(12)[np.argmax(out['raw_key'], axis=1)]
+        out['hard_key_new'] = np.eye(12)[np.argmax(out['raw_key_new'], axis=1)]
         out['hard_root'] = np.eye(13)[np.argmax(out['raw_root'], axis=1)]
         return out
 
