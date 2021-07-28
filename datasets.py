@@ -6,8 +6,7 @@ import jams
 import librosa
 from calibration import key_marg_add_logit, key_marg_simple_add, calibrate_key, new_cali_key, calibrate_root
 
-class ChordsTestSet(object):
-    
+class ChordsTestSet(object):   
     def __init__(self, data_home='/scratch/qx244/data/eric_chords_21sp'):
         self.data_home = data_home
         
@@ -121,3 +120,8 @@ class RockCorpus(object):
         
         return {'key': np.mean(key_mats, axis=0), 
                 'root': np.mean(root_mats, axis=0)}
+
+
+class Billboard(object):
+    def __init__(self, data_home='/scratch/qx244/data/billboard/'):
+        self.data_home = data_home
